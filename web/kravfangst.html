@@ -1,0 +1,924 @@
+<title>Kravfångst</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: grön toppbalk, smal arbetsyta med brödsmulor överst och ett formulär per steg. Färger från PRI-mallen. */
+:root {
+  --bg: #ffffff;
+  --surface: #eaefe7;
+  --head: #d5e0cf;
+  --card: #ffffff;
+  --ink: #232821;
+  --muted: #56604f;
+  --line: #c9d4c2;
+  --primary: #375623;
+  --on-primary: #ffffff;
+  --accent: #70ad47;
+  --on-accent: #ffffff;
+  --accent-text: #375623;
+  --locked: #8e978a;
+  --warn-bg: #fbeceb;
+  --warn-line: #e3b5b0;
+  --warn: #9c2b1f;
+  --font: "Carlito", Calibri, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11150f; --surface: #1b2218; --head: #27321f; --card: #222b1e; --ink: #e5eae1;
+    --muted: #a7b2a0; --line: #3a4733; --primary: #8cc66a; --on-primary: #0e140b;
+    --accent: #5f9a3b; --on-accent: #ffffff; --accent-text: #a6d886; --locked: #6c7667;
+    --warn-bg: #3a1c18; --warn-line: #6e3129; --warn: #f2a99f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11150f; --surface: #1b2218; --head: #27321f; --card: #222b1e; --ink: #e5eae1;
+  --muted: #a7b2a0; --line: #3a4733; --primary: #8cc66a; --on-primary: #0e140b;
+  --accent: #5f9a3b; --on-accent: #ffffff; --accent-text: #a6d886; --locked: #6c7667;
+  --warn-bg: #3a1c18; --warn-line: #6e3129; --warn: #f2a99f; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+h1, h2, h3 { line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.02rem; color: var(--accent-text); }
+p { margin: 0; }
+a { color: var(--accent-text); }
+
+.topbar { background: var(--primary); color: var(--on-primary); }
+.topbar .inner, main { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.topbar .inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 10px; }
+.brand { font-weight: 700; font-size: 1.15rem; color: inherit; text-decoration: none; }
+.topnav { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.topnav a { color: var(--on-primary); text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.topnav a[aria-current="page"] { background: color-mix(in srgb, var(--on-primary) 16%, transparent); }
+.topnav a.cta { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+main { padding-block: 24px 64px; display: grid; gap: 20px; }
+
+.btn { display: inline-block; border: 0; border-radius: 6px; padding: 9px 16px; font: inherit; font-weight: 700; cursor: pointer; background: var(--primary); color: var(--on-primary); text-decoration: none; }
+.btn.secondary { background: var(--head); color: var(--accent-text); }
+.btn.danger { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line); }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.flash { background: var(--head); border-radius: 6px; padding: 10px 14px; }
+.notice { background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 10px 14px; color: var(--muted); }
+.errors { background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn); border-radius: 6px; padding: 10px 14px; }
+.errors ul { margin: 4px 0 0; padding-left: 20px; }
+
+.panel { background: var(--surface); border-radius: 8px; padding: 20px 22px; display: grid; gap: 14px; min-width: 0; }
+.intro, .meta, .help { color: var(--muted); }
+.help { font-size: .88rem; }
+.req { color: var(--warn); }
+.sr { position: absolute; left: -9999px; }
+
+.hero { display: grid; gap: 10px; }
+.hero p { max-width: 70ch; color: var(--muted); font-size: 1.05rem; }
+.services { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.svc { background: var(--card); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; }
+
+.tag { display: inline-block; font-size: .8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--head); color: var(--accent-text); white-space: nowrap; }
+.tag.A { background: var(--primary); color: var(--on-primary); }
+.tag.B { background: var(--accent); color: var(--on-accent); }
+
+/* Brödsmulor */
+.flowhead { display: grid; gap: 6px; }
+.crumbs ol { display: flex; flex-wrap: wrap; row-gap: 6px; list-style: none; margin: 0; padding: 0; }
+.crumb { display: flex; align-items: center; }
+.crumb + .crumb::before { content: "›"; color: var(--muted); margin: 0 4px; font-size: 1.3rem; }
+.crumb > a, .crumb > span { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; text-decoration: none; color: var(--ink); }
+.num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); font-size: .85rem; font-weight: 700; flex: none; }
+.crumb.done .num { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.crumb.current > span { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.crumb.current .num { background: var(--on-primary); border-color: var(--on-primary); color: var(--primary); }
+.crumb.open > a { background: var(--surface); }
+.crumb > a:hover { background: var(--head); }
+.crumb.locked > span { color: var(--locked); }
+
+.stephead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.who { color: var(--accent-text); font-style: italic; }
+
+/* Formulär */
+form { display: grid; gap: 16px; }
+.field { display: grid; gap: 4px; }
+.field > label, legend { font-weight: 700; }
+.field.check label { display: flex; gap: 8px; align-items: center; font-weight: 700; }
+input, select, textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); }
+input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--accent); }
+textarea { resize: vertical; min-height: 4.5em; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+.story { background: var(--card); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; }
+.storypart { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 10px; }
+.storypart span { font-weight: 700; color: var(--accent-text); }
+.acrow { display: grid; grid-template-columns: 44px 1fr 1fr 1fr; gap: 8px; align-items: center; margin-top: 8px; }
+.acno { font-weight: 700; color: var(--accent-text); }
+
+.triage { display: grid; grid-template-columns: 1fr 260px; gap: 18px; align-items: start; }
+.questions { display: grid; gap: 10px; }
+.question { background: var(--card); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; }
+.question legend { font-weight: 400; float: left; width: 100%; }
+.question legend + * { clear: both; }
+.qlabel { font-weight: 700; color: var(--accent-text); margin-right: 6px; }
+.pills { display: flex; gap: 18px; }
+.pill { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.verdict { background: var(--head); border-radius: 8px; padding: 18px; display: grid; gap: 4px; }
+.verdict.A { background: var(--primary); color: var(--on-primary); }
+.verdict .big { font-size: 2rem; font-weight: 700; }
+details summary { cursor: pointer; color: var(--accent-text); font-weight: 700; }
+details[open] summary { margin-bottom: 12px; }
+details > .field + .field { margin-top: 12px; }
+
+.scoregrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.card { background: var(--card); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.card legend { font-size: 1.1rem; float: left; width: 100%; margin-bottom: 4px; }
+.card legend ~ * { clear: both; }
+.hint { font-weight: 400; color: var(--muted); font-size: .85rem; }
+.row { display: grid; grid-template-columns: 1fr 72px; gap: 8px; align-items: center; }
+.row em { color: var(--accent-text); font-style: normal; font-weight: 700; font-size: .85rem; white-space: nowrap; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tiles.two { grid-template-columns: repeat(2, 1fr); }
+.tile { background: var(--card); border-radius: 8px; padding: 12px 14px; }
+.tile span { display: block; font-weight: 700; color: var(--accent-text); font-size: .9rem; }
+.tile strong { font-size: 2rem; margin-right: 4px; font-variant-numeric: tabular-nums; }
+.tile small { color: var(--muted); }
+.side .tile { background: var(--surface); }
+.tile.dark, .side .tile.dark { background: var(--primary); color: var(--on-primary); }
+.tile.dark span, .tile.dark small { color: var(--on-primary); }
+
+/* Resultat */
+.summary { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
+.side { display: grid; gap: 20px; min-width: 0; }
+dl.es { display: grid; grid-template-columns: 150px 1fr; margin: 0; background: var(--card); border-radius: 8px; overflow: hidden; }
+dl.es dt, dl.es dd { padding: 10px 12px; margin: 0; border-bottom: 1px solid var(--surface); }
+dl.es dt { font-weight: 700; background: var(--head); }
+dl.es dd { white-space: pre-line; min-width: 0; overflow-wrap: anywhere; }
+dl.es .rec { background: var(--head); font-weight: 700; }
+.thestory { font-size: 1.3rem; background: var(--card); border-radius: 8px; padding: 16px; }
+.thestory b, .acs b { color: var(--accent-text); }
+.acs { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pre { white-space: pre-line; overflow-wrap: anywhere; }
+
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+thead th { background: var(--head); }
+.n { text-align: right; }
+.goals { background: var(--card); border-radius: 8px; overflow: hidden; }
+.goals tfoot th, .goals tfoot td { background: var(--head); }
+.goals td:not(:first-child), .goals th:not(:first-child) { text-align: right; }
+td.n input { max-width: 120px; margin-left: auto; display: block; }
+.bar { width: 80px; height: 8px; border-radius: 4px; background: var(--card); display: inline-block; vertical-align: middle; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.checklist li { display: flex; gap: 10px; align-items: center; }
+.box { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; border: 2px solid var(--primary); background: var(--card); font-weight: 700; color: var(--on-primary); flex: none; }
+.ok .box { background: var(--primary); }
+.checklist .nok { color: var(--muted); }
+.status { font-weight: 700; padding: 8px 12px; border-radius: 6px; }
+.status.ok { background: var(--primary); color: var(--on-primary); }
+.status.nok { background: var(--head); color: var(--accent-text); }
+
+.empty { background: var(--card); border-radius: 8px; padding: 18px; display: grid; gap: 8px; justify-items: start; }
+
+@media (max-width: 860px) {
+  .triage, .scoregrid, .summary, .cols, .services { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .acrow { grid-template-columns: 1fr; }
+  dl.es { grid-template-columns: 1fr; }
+  dl.es dt { border-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" href="#start">Kravfångst</a>
+    <nav class="topnav" aria-label="Huvudmeny">
+      <a href="#start" data-nav="start">Ärenden</a>
+      <a href="#mal" data-nav="mal">Strategiska mål</a>
+      <a href="#nytt" class="cta" data-nav="nytt">+ Nytt behov</a>
+    </nav>
+  </div>
+</header>
+<main id="main" aria-live="polite">
+  <section class="panel hero">
+    <h1>Kravfångst som tjänst</h1>
+    <p>Hämtar ärenden …</p>
+  </section>
+</main>
+
+<script>
+(() => {
+/* ---------- Regler (samma som i Python-versionen) ---------- */
+const VALUE_CRITERIA = [
+  ["v_ekonomi", "Ekonomisk effekt (intäkt/besparing)", 0.40],
+  ["v_kund", "Kund- och användarnytta", 0.30],
+  ["v_regel", "Regelefterlevnad & riskreducering", 0.20],
+  ["v_tid", "Tidskritikalitet", 0.10],
+];
+const COMPLEXITY_CRITERIA = [
+  ["c_teknik", "Teknisk komplexitet", 0.25],
+  ["c_beroenden", "Beroenden & integrationer", 0.25],
+  ["c_organisation", "Organisatorisk förändring", 0.25],
+  ["c_osakerhet", "Osäkerhet & ny teknik", 0.25],
+];
+const TRIAGE_QUESTIONS = [
+  ["t_kostnad", "Kostnad", "Uppskattad insats över ~300 timmar eller extern investering?"],
+  ["t_omfattning", "Omfattning", "Berörs flera system, team eller verksamhetsområden?"],
+  ["t_strategi", "Strategi", "Är det en ny förmåga, tjänst eller kundgrupp?"],
+  ["t_regelverk", "Regelverk", "Påverkas juridik, compliance, informationssäkerhet eller personuppgifter väsentligt?"],
+  ["t_risk", "Risk", "Skulle ett misslyckande ge stor påverkan på kunder eller verksamhet?"],
+];
+const HIGH = 1.5, MEDIUM = 1.0, AC_ROWS = 5;
+const DEFAULT_GOALS = [
+  { id: "g1", name: "Strategiskt mål 1", weight: 40 },
+  { id: "g2", name: "Strategiskt mål 2", weight: 35 },
+  { id: "g3", name: "Strategiskt mål 3", weight: 25 },
+];
+const SERVICE_NAMES = { A: "Tjänst A – Större initiativ", B: "Tjänst B – Mindre vidareutveckling" };
+
+const F = (name, label, type = "text", opts = {}) => ({ name, label, type, required: false, help: "", choices: [], placeholder: "", ...opts });
+const R = { required: true };
+
+const INTAG = { key: "intag", title: "Intag", kind: "form", who: "Initiativtagare / beställare",
+  intro: "Registrera behovet. Alla behov kommer in på samma ställe.",
+  fields: [
+    F("titel", "Titel", "text", { ...R, placeholder: "Kort namn på behovet" }),
+    F("bestallare", "Beställare / initiativtagare", "text", R),
+    F("system", "Berört system, produkt eller verksamhetsområde"),
+    F("beskrivning", "Beskriv behovet", "textarea", { ...R, help: "Vad fungerar inte eller saknas idag, och vem påverkas?" }),
+  ] };
+const TRIAGE = { key: "triage", title: "Triage", kind: "triage", who: "Produktägare + portföljansvarig",
+  intro: "Ett enda ja leder till Tjänst A (större initiativ). Annars Tjänst B (mindre vidareutveckling).",
+  fields: [
+    ...TRIAGE_QUESTIONS.map(([k, l, q]) => F(k, `${l} – ${q}`, "radio", R)),
+    F("triage_overstyr", "Överstyr tjänst", "select", { choices: ["", "A", "B"], help: "Används bara vid tveksamhet – motivera nedan." }),
+    F("triage_motivering", "Motivering till överstyrning", "textarea"),
+  ] };
+
+const STEPS_A = [
+  { key: "problem", title: "Problem & effekter", kind: "form", who: "Workshop 1 – verksamhet", intro: "Workshop 1 med verksamheten.",
+    fields: [
+      F("sponsor", "Sponsor", "text", R),
+      F("problem", "Vad är problemet?", "textarea", R),
+      F("vem_problem", "Vem har problemet?", "textarea", R),
+      F("varfor_viktigt", "Varför är det viktigt – varför nu?", "textarea"),
+      F("effekter", "Vad vill vi uppnå? Finansiella och icke-finansiella effekter", "textarea", R),
+      F("intressenter", "Intressenter och deras prioriterade behov", "textarea", R),
+    ] },
+  { key: "losning", title: "Lösning & scope", kind: "form", who: "Workshop 2 – verksamhet, IT, arkitektur", intro: "Workshop 2 med verksamhet, IT och arkitektur.",
+    fields: [
+      F("losning", "Föreslagen lösning", "textarea", R),
+      F("scope", "Scope – vad innehåller lösningen?", "textarea", R),
+      F("avgransningar", "Begränsningar och avgränsningar", "textarea"),
+      F("mvp", "MVP – minsta första leverans", "textarea", R),
+      F("resurser", "Resurser – interna och externa", "textarea", R),
+      F("tidskritiskt", "Hur tidskritiskt är det?", "textarea"),
+      F("tid", "Ungefärlig start och leveranstid"),
+    ] },
+  { key: "business_case", title: "Business case", kind: "form", who: "Kravanalytiker + ekonomi", intro: "Kostnad, nytta, ROI, risker och mätpunkter.",
+    fields: [
+      F("okade_intakter", "Ökade intäkter per år (tkr)", "number"),
+      F("besparing", "Besparing per år (tkr)", "number"),
+      F("kostnad_implementering", "Implementeringskostnad (tkr)", "number", R),
+      F("kostnad_lopande", "Löpande kostnad per år (tkr)", "number"),
+      F("livslangd_ar", "Investeringens livslängd (år)", "number", R),
+      F("risker", "Risker – vad kan gå fel, konsekvenser och åtgärder", "textarea", R),
+      F("matpunkter", "Mätpunkter – hur vet vi att vi lyckats?", "textarea", R),
+    ] },
+  { key: "prioscore", title: "Prioscore", kind: "prioscore", who: "Kravanalytiker + portföljansvarig",
+    intro: "Poängsätt affärsvärde och komplexitet (1–10) och initiativets bidrag till varje strategiskt mål (0–100 %).",
+    fields: [...VALUE_CRITERIA, ...COMPLEXITY_CRITERIA].map(([k, l]) => F(k, l, "number", R)) },
+  { key: "beslut", title: "Beslut & redo", kind: "form", who: "Portföljforum, juridik/compliance", intro: "Godkännande och go / no-go i portföljforum.",
+    fields: [
+      F("juridik_godkand", "Godkänt av juridik/compliance", "checkbox", R),
+      F("rekommendation", "Rekommendation till beslut", "textarea", R),
+      F("beslut", "Beslut", "select", { ...R, choices: ["", "Go", "No-go", "Omforma"] }),
+      F("beslutsdatum", "Beslutsdatum", "date", R),
+      F("epics", "Epics i backlog (en per rad)", "textarea"),
+    ] },
+  { key: "resultat", title: "Executive summary", kind: "result", fields: [] },
+];
+const STEPS_B = [
+  { key: "user_story", title: "User story", kind: "form", who: "Produktägare + beställare + team",
+    intro: "Skriv behovet som en user story och sätt acceptanskriterier tillsammans med teamet.",
+    fields: [
+      F("roll", "Som …", "story", { ...R, placeholder: "roll/användare" }),
+      F("vill", "vill jag …", "story", { ...R, placeholder: "behov/förmåga" }),
+      F("sa_att", "så att …", "story", { ...R, placeholder: "nytta/värde" }),
+      F("bakgrund", "Behov & bakgrund", "textarea", { help: "Nuvarande arbetssätt, workaround, hur ofta det inträffar." }),
+      F("nytta_matpunkt", "Nytta & mätpunkt", "textarea", { help: "Vad blir bättre och hur följer vi upp det?" }),
+      F("paverkan", "Påverkan & beroenden", "textarea", { help: "Berörda system, integrationer, personuppgifter, regelverk." }),
+      F("ac", "Acceptanskriterier", "ac_list", R),
+    ] },
+  { key: "prioritera", title: "Prioritera", kind: "form", who: "Produktägare / förvaltningsforum", intro: "Värde mot insats och placering i backlog.",
+    fields: [
+      F("storlek", "Storlek", "select", { ...R, choices: ["", "S (<1 v)", "M (1–2 v)", "L (2–4 v)"] }),
+      F("prioritet", "Prioritet", "select", { ...R, choices: ["", "Hög", "Medel", "Låg"] }),
+      F("po_prioriterad", "Prioriterad av produktägare", "checkbox", R),
+      F("eskalera", "Större än väntat – eskalera till Tjänst A", "checkbox", { help: "Flyttar ärendet till Tjänst A och återanvänder det som redan skrivits." }),
+    ] },
+  { key: "redo", title: "Redo & återkoppla", kind: "form", who: "Produktägare", intro: "Definition of Ready och besked till beställaren.",
+    fields: [
+      F("bestallare_godkand", "Godkänd av beställaren", "checkbox", R),
+      F("redo_datum", "Redo för utveckling (datum)", "date", R),
+      F("aterkoppling", "Återkoppling till beställaren", "textarea"),
+    ] },
+  { key: "resultat", title: "Färdig user story", kind: "result", fields: [] },
+];
+
+const stepsFor = (s) => [INTAG, TRIAGE, ...({ A: STEPS_A, B: STEPS_B }[s] || [])];
+const getStep = (s, key) => stepsFor(s).find((x) => x.key === key);
+
+/* ---------- Beräkningar ---------- */
+function triageService(d) {
+  const v = TRIAGE_QUESTIONS.map(([k]) => d[k]);
+  if (v.some((x) => x !== "ja" && x !== "nej")) return null;
+  return v.includes("ja") ? "A" : "B";
+}
+function score1to10(v) {
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 1 && n <= 10 ? n : null;
+}
+const round = (n, p = 2) => Math.round(n * 10 ** p) / 10 ** p;
+function weighted(d, criteria) {
+  const s = criteria.map(([k]) => score1to10(d[k]));
+  if (s.some((x) => x === null)) return null;
+  return round(s.reduce((a, x, i) => a + x * criteria[i][2], 0));
+}
+function alignment(d, goals) {
+  if (!goals.length) return null;
+  let t = 0;
+  for (const g of goals) {
+    const raw = d["s_" + g.id];
+    if (raw === undefined || raw === null || raw === "" || !Number.isFinite(Number(raw))) return null;
+    t += (g.weight / 100) * Math.min(Math.max(Number(raw), 0), 100);
+  }
+  return round(t, 1);
+}
+function prioscore(d, goals) {
+  const value = weighted(d, VALUE_CRITERIA), complexity = weighted(d, COMPLEXITY_CRITERIA), align = alignment(d, goals);
+  const coefficient = align === null ? null : round(align / 100);
+  const score = value === null || complexity === null || coefficient === null ? null : round((value * coefficient) / complexity);
+  const level = score === null ? null : score >= HIGH ? "Hög prioritet" : score >= MEDIUM ? "Prioritera vid kapacitet" : "Utmana eller omforma";
+  return { value, complexity, alignment: align, coefficient, score, level };
+}
+const amount = (d, k) => (Number.isFinite(Number(d[k])) && d[k] !== "" ? Number(d[k]) : 0);
+function businessCase(d) {
+  const years = Math.max(amount(d, "livslangd_ar"), 1);
+  const value = (amount(d, "okade_intakter") + amount(d, "besparing")) * years;
+  const cost = amount(d, "kostnad_implementering") + amount(d, "kostnad_lopande") * years;
+  return { value, cost, roi: cost > 0 ? round(((value - cost) / cost) * 100, 1) : null };
+}
+
+/* ---------- Flöde ---------- */
+function acRows(d) {
+  const rows = [];
+  for (let i = 0; i < AC_ROWS; i++) {
+    const r = { givet: (d[`ac_${i}_givet`] || "").trim(), nar: (d[`ac_${i}_nar`] || "").trim(), sa: (d[`ac_${i}_sa`] || "").trim() };
+    if (r.givet || r.nar || r.sa) rows.push(r);
+  }
+  return rows;
+}
+const completeAc = (d) => acRows(d).some((r) => r.givet && r.nar && r.sa);
+function filled(f, d) {
+  if (f.type === "ac_list") return completeAc(d);
+  if (f.type === "checkbox") return d[f.name] === "on";
+  return d[f.name] !== undefined && d[f.name] !== null && d[f.name] !== "";
+}
+function missingFields(step, d, service, goals) {
+  const m = step.fields.filter((f) => f.required && !filled(f, d)).map((f) => f.label);
+  if (step.kind === "triage" && !service) m.push("Tjänst");
+  if (step.kind === "prioscore") goals.forEach((g) => { if (d["s_" + g.id] === undefined || d["s_" + g.id] === "") m.push("Bidrag till " + g.name); });
+  return m;
+}
+function stepStates(service, d, currentKey, goals) {
+  const out = [];
+  let blocked = false;
+  for (const step of stepsFor(service)) {
+    const done = step.kind === "result" ? !blocked : missingFields(step, d, service, goals).length === 0;
+    const state = blocked ? "locked" : step.key === currentKey ? "current" : done ? "done" : "open";
+    out.push({ step, state, done: done && !blocked });
+    if (!done) blocked = true;
+  }
+  if (!service) out.push({ step: { key: "tjanst", title: "Tjänstens steg" }, state: "locked", done: false });
+  return out;
+}
+function nextOpenStep(service, d, goals) {
+  const s = stepStates(service, d, null, goals).find((x) => !x.done && x.step.key !== "tjanst");
+  return s ? s.step : stepsFor(service).at(-1);
+}
+function dor(service, d, score, roi) {
+  const has = (...k) => k.every((x) => d[x] !== undefined && d[x] !== "");
+  if (service === "A") return [
+    ["Canvas A ifylld (problem, lösning, scope, resurser)", has("problem", "losning", "scope", "resurser")],
+    ["Problem, effekter och mätpunkter överenskomna", has("problem", "effekter", "matpunkter")],
+    ["Kostnad och ROI uppskattade", roi !== null],
+    ["Executive summary med prioscore klar", score !== null],
+    ["Godkänt av juridik/compliance", d.juridik_godkand === "on"],
+    ["Go-beslut i portföljforum", d.beslut === "Go"],
+    ["Epics och MVP-scope i backlog", has("epics", "mvp")],
+  ];
+  return [
+    ["User story: Som … vill jag … så att …", has("roll", "vill", "sa_att")],
+    ["Behov och bakgrund beskrivna", has("bakgrund")],
+    ["Acceptanskriterier skrivna (Givet/När/Så)", completeAc(d)],
+    ["Estimerad och prioriterad", has("storlek", "prioritet") && d.po_prioriterad === "on"],
+    ["Beroenden och regelpåverkan kontrollerade", has("paverkan")],
+    ["Godkänd av beställaren", d.bestallare_godkand === "on"],
+  ];
+}
+function escalateToA(d) {
+  const m = { ...d };
+  const story = `Som ${d.roll || ""} vill jag ${d.vill || ""} så att ${d.sa_att || ""}`.trim();
+  if (!m.problem) m.problem = [d.beskrivning, d.bakgrund].filter(Boolean).join("\n\n");
+  if (!m.vem_problem) m.vem_problem = d.roll || "";
+  if (!m.effekter) m.effekter = [d.sa_att, d.nytta_matpunkt].filter(Boolean).join("\n");
+  if (!m.losning) m.losning = story;
+  m.eskalerad_fran_b = "on";
+  m.eskalera = "";
+  return m;
+}
+
+/* ---------- Format ---------- */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (v, suffix = "") => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? "–" : Number(v).toLocaleString("sv-SE", { maximumFractionDigits: 2 }) + suffix);
+const when = (iso) => { try { return new Date(iso).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" }); } catch { return iso; } };
+
+/* ---------- Lagring: delad databas, annars bara i webbläsaren ---------- */
+const store = {
+  mode: "pending", cases: new Map(), goals: DEFAULT_GOALS, loaded: false, canWrite: true, canEditGoals: true, db: null,
+  async saveCase(c) {
+    c.uppdaterad = new Date().toISOString();
+    this.cases.set(c.id, c);
+    if (this.mode === "db") await this.db.doc("arenden/" + c.id).set({ titel: c.titel, tjanst: c.tjanst || "", data: c.data, skapad: c.skapad, uppdaterad: c.uppdaterad });
+    else saveLocal();
+  },
+  async deleteCase(id) {
+    this.cases.delete(id);
+    if (this.mode === "db") await this.db.doc("arenden/" + id).delete();
+    else saveLocal();
+  },
+  async saveGoals(goals) {
+    this.goals = goals;
+    if (this.mode === "db") await this.db.doc("config/mal").set({ goals });
+    else saveLocal();
+  },
+};
+const LS = "kravfangst-lokal";
+function saveLocal() {
+  try { localStorage.setItem(LS, JSON.stringify({ cases: [...store.cases.values()], goals: store.goals })); } catch {}
+}
+function loadLocal() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS) || "null");
+    if (raw) { raw.cases.forEach((c) => store.cases.set(c.id, c)); if (raw.goals?.length) store.goals = raw.goals; }
+  } catch {}
+}
+
+/* ---------- Routing (#start, #nytt, #mal, #a-<id>-<steg>) ---------- */
+let flash = null, formErrors = [], editing = false;
+const go = (hash) => { if (location.hash === "#" + hash) render(); else location.hash = hash; };
+function route() {
+  const h = location.hash.slice(1);
+  if (h === "nytt" || h === "mal") return { view: h };
+  const m = h.match(/^a-([A-Za-z0-9]+)-([a-z_]+)$/) || h.match(/^a-([A-Za-z0-9]+)$/);
+  if (m) return { view: "case", id: m[1], key: m[2] };
+  return { view: "start" };
+}
+window.addEventListener("hashchange", () => { formErrors = []; render(); window.scrollTo(0, 0); });
+
+const $main = document.getElementById("main");
+function render() {
+  const r = route();
+  editing = r.view === "nytt" || (r.view === "case" && r.key && r.key !== "resultat") || r.view === "mal";
+  document.querySelectorAll("[data-nav]").forEach((a) => (a.dataset.nav === r.view ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+  let html = "";
+  if (flash) { html += `<div class="flash" role="status">${esc(flash)}</div>`; flash = null; }
+  if (store.mode === "local") html += `<p class="notice">Den delade databasen är inte tillgänglig i den här vyn. Ärenden sparas bara i din webbläsare.</p>`;
+  if (!store.canWrite) html += `<p class="notice">Du kan läsa ärendena men inte ändra dem. Be ägaren om behörigheten Contributor för att kunna registrera och redigera.</p>`;
+  if (r.view === "start") html += viewStart();
+  else if (r.view === "nytt") html += viewStep(null, INTAG, {});
+  else if (r.view === "mal") html += viewGoals();
+  else html += viewCase(r);
+  $main.innerHTML = html;
+  bindLive();
+}
+
+/* ---------- Vyer ---------- */
+function crumbsHtml(c, service, crumbs) {
+  return `<div class="flowhead">
+    <div><span class="tag ${service || ""}">${esc(SERVICE_NAMES[service] || "Tjänst avgörs i triage")}</span></div>
+    <h1>${esc(c ? c.titel : "Nytt behov")}</h1>
+    <nav class="crumbs" aria-label="Steg i kravfångsten"><ol>${crumbs.map((x, i) => {
+      const done = x.done && x.state !== "current";
+      const inner = `<span class="num">${done ? "✓" : i + 1}</span><span>${esc(x.step.title)}</span>`;
+      const cls = `crumb ${x.state}${done ? " done" : ""}`;
+      if (x.state === "current") return `<li class="${cls}"><span aria-current="step">${inner}</span></li>`;
+      if (x.state === "locked" || !c) return `<li class="${cls}"><span aria-disabled="true">${inner}</span></li>`;
+      return `<li class="${cls}"><a href="#a-${c.id}-${x.step.key}">${inner}</a></li>`;
+    }).join("")}</ol></nav></div>`;
+}
+
+function viewStart() {
+  const goals = store.goals;
+  const cases = [...store.cases.values()].sort((a, b) => (b.uppdaterad || "").localeCompare(a.uppdaterad || "")).map((c) => {
+    const states = stepStates(c.tjanst || null, c.data, null, goals).filter((s) => s.step.key !== "tjanst");
+    const total = stepsFor(c.tjanst || null).length + (c.tjanst ? 0 : 1);
+    return { ...c, score: c.tjanst === "A" ? prioscore(c.data, goals) : null, done: states.filter((s) => s.done).length, total, next: nextOpenStep(c.tjanst || null, c.data, goals) };
+  });
+  const portfolio = cases.filter((c) => c.score && c.score.score !== null).sort((a, b) => b.score.score - a.score.score);
+  let h = `<section class="panel hero">
+    <h1>Kravfångst som tjänst</h1>
+    <p>Alla behov registreras på ett ställe. En kort triage avgör vilken av de två tjänsterna behovet går vidare i.</p>
+    <div class="services">
+      <div class="svc"><span class="tag A">Tjänst A</span><strong>Större initiativ</strong><span class="help">Business case, prioscore och executive summary till portföljforum. 3–6 veckor.</span></div>
+      <div class="svc"><span class="tag B">Tjänst B</span><strong>Mindre vidareutveckling</strong><span class="help">User story med behov och acceptanskriterier. Normalt inom en vecka.</span></div>
+    </div>
+    ${store.canWrite ? `<div><a class="btn" href="#nytt">+ Registrera nytt behov</a></div>` : ""}
+  </section>`;
+  if (!store.loaded) return h + `<section class="panel"><h2>Ärenden</h2><p class="intro">Hämtar ärenden …</p></section>`;
+  if (portfolio.length) h += `<section class="panel"><h2>Portfölj – större initiativ efter prioscore</h2><div class="scroll"><table>
+    <thead><tr><th>#</th><th>Initiativ</th><th class="n">Affärsvärde</th><th class="n">Komplexitet</th><th class="n">Strategi</th><th class="n">Prioscore</th><th>Nivå</th></tr></thead><tbody>
+    ${portfolio.map((c, i) => `<tr><td>${i + 1}</td><td><a href="#a-${c.id}">${esc(c.titel)}</a></td><td class="n">${num(c.score.value)}</td><td class="n">${num(c.score.complexity)}</td><td class="n">${num(c.score.alignment, " %")}</td><td class="n"><b>${num(c.score.score)}</b></td><td>${esc(c.score.level)}</td></tr>`).join("")}
+    </tbody></table></div></section>`;
+  h += `<section class="panel"><h2>Alla ärenden</h2>`;
+  if (!cases.length) {
+    h += `<div class="empty"><strong>Inga ärenden ännu</strong><p class="help">Registrerade behov visas här med tjänst, nästa steg och hur långt de har kommit.</p>${store.canWrite ? `<a class="btn secondary" href="#nytt">Registrera det första behovet</a>` : ""}</div>`;
+  } else {
+    h += `<div class="scroll"><table><thead><tr><th>Ärende</th><th>Tjänst</th><th>Nästa steg</th><th>Framsteg</th><th>Uppdaterad</th><th></th></tr></thead><tbody>
+    ${cases.map((c) => {
+      const finished = c.done >= c.total;
+      return `<tr><td><a href="#a-${c.id}">${esc(c.titel)}</a></td>
+      <td><span class="tag ${c.tjanst || ""}">${c.tjanst ? "Tjänst " + c.tjanst : "Triage"}</span></td>
+      <td>${finished ? "<b>Klar</b> – " + esc(c.next.title.toLowerCase()) : esc(c.next.title)}</td>
+      <td><span class="bar" aria-hidden="true"><i style="width:${Math.round((c.done / c.total) * 100)}%"></i></span> <small>${c.done}/${c.total}</small></td>
+      <td><small>${esc(when(c.uppdaterad))}</small></td>
+      <td>${store.canWrite ? `<button class="linkbtn" data-delete="${c.id}">Radera</button>` : ""}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
+  }
+  return h + `</section>`;
+}
+
+function viewCase(r) {
+  const c = store.cases.get(r.id);
+  if (!store.loaded) return `<section class="panel"><p class="intro">Hämtar ärendet …</p></section>`;
+  if (!c) return `<section class="panel"><h2>Ärendet finns inte</h2><p class="intro">Det kan ha raderats.</p><p><a href="#start">Till alla ärenden</a></p></section>`;
+  const service = c.tjanst || null, goals = store.goals;
+  if (!r.key) { const n = nextOpenStep(service, c.data, goals); history.replaceState(null, "", `#a-${c.id}-${n.key}`); r.key = n.key; }
+  const step = getStep(service, r.key);
+  const crumbs = stepStates(service, c.data, r.key, goals);
+  const mine = crumbs.find((x) => x.step.key === r.key);
+  if (!step || !mine || mine.state === "locked") {
+    const n = nextOpenStep(service, c.data, goals);
+    flash = "Gör klart tidigare steg först.";
+    setTimeout(() => go(`a-${c.id}-${n.key}`));
+    return "";
+  }
+  if (step.kind === "result") return crumbsHtml(c, service, crumbs) + (service === "A" ? viewExec(c) : viewStory(c));
+  return crumbsHtml(c, service, crumbs) + viewStep(c, step, c.data);
+}
+
+function fieldHtml(f, d) {
+  const v = d[f.name] ?? "";
+  const req = f.required ? ' <span class="req">*</span>' : "";
+  const help = f.help ? `<p class="help">${esc(f.help)}</p>` : "";
+  const id = "f_" + f.name;
+  if (f.type === "checkbox") return `<div class="field check"><label><input type="checkbox" id="${id}" name="${f.name}" ${v === "on" ? "checked" : ""}> ${esc(f.label)}${req}</label>${help}</div>`;
+  let ctl;
+  if (f.type === "textarea") ctl = `<textarea id="${id}" name="${f.name}" rows="3" placeholder="${esc(f.placeholder)}">${esc(v)}</textarea>`;
+  else if (f.type === "select") ctl = `<select id="${id}" name="${f.name}">${f.choices.map((ch) => `<option value="${esc(ch)}" ${ch === v ? "selected" : ""}>${esc(ch || "Välj …")}</option>`).join("")}</select>`;
+  else ctl = `<input id="${id}" name="${f.name}" type="${f.type}" value="${esc(v)}" placeholder="${esc(f.placeholder)}" ${f.type === "number" ? 'step="any" inputmode="decimal"' : ""}>`;
+  return `<div class="field"><label for="${id}">${esc(f.label)}${req}</label>${ctl}${help}</div>`;
+}
+
+function viewStep(c, step, d) {
+  const ro = !store.canWrite;
+  let body = "";
+  if (step.kind === "triage") {
+    const rec = triageService(d);
+    body += `<div class="triage"><div class="questions">${TRIAGE_QUESTIONS.map(([k, l, q]) => `
+      <fieldset class="question"><legend><span class="qlabel">${esc(l)}</span>${esc(q)}</legend>
+      <div class="pills">${["ja", "nej"].map((o) => `<label class="pill"><input type="radio" id="f_${k}_${o}" name="${k}" value="${o}" ${d[k] === o ? "checked" : ""}> ${o === "ja" ? "Ja" : "Nej"}</label>`).join("")}</div></fieldset>`).join("")}
+      </div><aside class="verdict ${rec === "A" ? "A" : ""}" id="verdict" aria-live="polite">
+        <p class="help" style="color:inherit">Rekommenderad tjänst</p>
+        <p class="big" id="verdict-service">${rec ? "Tjänst " + rec : "–"}</p>
+        <p id="verdict-name">${esc(SERVICE_NAMES[rec] || "Besvara alla frågor")}</p></aside></div>
+      <details ${d.triage_overstyr ? "open" : ""}><summary>Överstyr rekommendationen</summary>
+        ${fieldHtml(step.fields.at(-2), d)}${fieldHtml(step.fields.at(-1), d)}</details>`;
+  } else if (step.kind === "prioscore") {
+    const s = prioscore(d, store.goals);
+    const card = (title, criteria, hint, group) => `<fieldset class="card"><legend>${title} <span class="hint">1–10 · ${hint}</span></legend>
+      ${criteria.map(([k, l, w]) => `<label class="row"><span>${esc(l)} <em>${Math.round(w * 100)} %</em></span>
+      <input type="number" id="f_${k}" name="${k}" min="1" max="10" step="1" inputmode="numeric" value="${esc(d[k] ?? "")}" data-group="${group}" data-weight="${w}"></label>`).join("")}</fieldset>`;
+    body += `<div class="scoregrid">${card("Affärsvärde", VALUE_CRITERIA, "Högt = mer värde", "v")}${card("Komplexitet", COMPLEXITY_CRITERIA, "Högt = svårare", "c")}
+      <fieldset class="card"><legend>Strategikoppling <span class="hint">bidrag 0–100 %</span></legend>
+      ${store.goals.map((g) => `<label class="row"><span>${esc(g.name)} <em>vikt ${num(g.weight, " %")}</em></span>
+      <input type="number" id="f_s_${esc(g.id)}" name="s_${esc(g.id)}" min="0" max="100" step="1" inputmode="numeric" value="${esc(d["s_" + g.id] ?? "")}" data-group="s" data-weight="${g.weight / 100}"></label>`).join("")}
+      <p class="help"><a href="#mal">Strategiska mål och vikter</a></p></fieldset></div>
+      <div class="tiles" id="score-tiles" aria-live="polite">
+        <div class="tile"><span>Affärsvärde</span><strong data-out="v">${num(s.value)}</strong><small>/ 10</small></div>
+        <div class="tile"><span>Komplexitet</span><strong data-out="c">${num(s.complexity)}</strong><small>/ 10</small></div>
+        <div class="tile"><span>Strategikoppling</span><strong data-out="s">${num(s.alignment)}</strong><small>% · koefficient <b data-out="k">${num(s.coefficient)}</b></small></div>
+        <div class="tile dark"><span>Prioscore</span><strong data-out="p">${num(s.score)}</strong><small data-out="l">${esc(s.level || "Värde × koeff. ÷ komplexitet")}</small></div>
+      </div>`;
+  } else {
+    for (const f of step.fields) {
+      if (f.type === "story") {
+        if (f.name !== "roll") continue;
+        body += `<fieldset class="story"><legend>User story <span class="req">*</span></legend>${step.fields.filter((x) => x.type === "story").map((x) => `
+          <label class="storypart"><span>${esc(x.label)}</span><input id="f_${x.name}" name="${x.name}" value="${esc(d[x.name] ?? "")}" placeholder="${esc(x.placeholder)}"></label>`).join("")}</fieldset>`;
+      } else if (f.type === "ac_list") {
+        body += `<fieldset><legend>Acceptanskriterier <span class="req">*</span></legend><p class="help">Minst ett komplett kriterium i formen Givet – När – Så.</p>
+          ${Array.from({ length: AC_ROWS }, (_, i) => `<div class="acrow"><span class="acno">AC${i + 1}</span>
+          ${[["givet", "Givet …"], ["nar", "När …"], ["sa", "Så …"]].map(([p, ph]) => `<input id="f_ac_${i}_${p}" name="ac_${i}_${p}" placeholder="${ph}" aria-label="AC${i + 1} ${ph.replace(" …", "").toLowerCase()}" value="${esc(d[`ac_${i}_${p}`] ?? "")}">`).join("")}</div>`).join("")}</fieldset>`;
+      } else body += fieldHtml(f, d);
+    }
+  }
+  const errs = formErrors.length ? `<div class="errors" role="alert"><strong>Fyll i för att gå vidare:</strong><ul>${formErrors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>` : "";
+  formErrors = [];
+  return `${c ? "" : crumbsHtml(null, null, stepStates(null, {}, "intag", store.goals))}
+  <section class="panel"><div class="stephead"><h2>${esc(step.title)}</h2><p class="who">${esc(step.who || "")}</p></div>
+  <p class="intro">${esc(step.intro || "")}</p>${errs}
+  <form id="stepform" data-case="${c ? c.id : ""}" data-step="${step.key}" novalidate>
+    <fieldset ${ro ? "disabled" : ""} style="display:grid;gap:16px">${body}</fieldset>
+    ${ro ? "" : `<div class="actions">${c ? `<button type="submit" class="btn secondary" value="save">Spara utkast</button>` : ""}<button type="submit" class="btn" value="next">Spara och gå vidare →</button></div>`}
+  </form></section>`;
+}
+
+function dorHtml(items) {
+  const all = items.every(([, ok]) => ok);
+  return `<section class="panel"><h2>Definition of Ready</h2><ul class="checklist">${items.map(([l, ok]) =>
+    `<li class="${ok ? "ok" : "nok"}"><span class="box" aria-hidden="true">${ok ? "✓" : ""}</span>${esc(l)}<span class="sr">${ok ? " – klart" : " – saknas"}</span></li>`).join("")}</ul>
+    <p class="status ${all ? "ok" : "nok"}">${all ? "Redo för utveckling" : "Inte redo ännu – komplettera punkterna ovan"}</p></section>`;
+}
+
+function execText(c, s, bc) {
+  const d = c.data;
+  return [`EXECUTIVE SUMMARY – ${c.titel}`, `Beställare: ${d.bestallare || "–"} · Sponsor: ${d.sponsor || "–"} · Beslut: ${d.beslut || "–"} ${d.beslutsdatum || ""}`, "",
+    `Prioscore ${num(s.score)} (${s.level || "–"}) = Affärsvärde ${num(s.value)} × Strategikoefficient ${num(s.coefficient)} ÷ Komplexitet ${num(s.complexity)}`,
+    `Strategikoppling ${num(s.alignment, " %")}`, "",
+    `Problem: ${d.problem || "–"}`, `Lösning: ${d.losning || "–"}`, `MVP: ${d.mvp || "–"}`, `Effekter: ${d.effekter || "–"}`,
+    `Kostnad & ROI: affärsvärde ${num(bc.value, " tkr")}, total kostnad ${num(bc.cost, " tkr")}, ROI ${num(bc.roi, " %")}`,
+    `Risker: ${d.risker || "–"}`, `Tid & resurser: ${d.tid || "–"} ${d.resurser || ""}`, `Mätpunkter: ${d.matpunkter || "–"}`, `Rekommendation: ${d.rekommendation || "–"}`,
+    d.epics ? `Epics:\n${d.epics.split("\n").filter((x) => x.trim()).map((x) => "- " + x).join("\n")}` : ""].join("\n");
+}
+function storyText(c) {
+  const d = c.data;
+  return [`${c.titel}`, "", `Som ${d.roll} vill jag ${d.vill} så att ${d.sa_att}`, "", "Behov & bakgrund:", d.bakgrund || d.beskrivning || "–", "",
+    "Acceptanskriterier:", ...acRows(d).map((a, i) => `AC${i + 1}: Givet ${a.givet} när ${a.nar} så ${a.sa}`), "",
+    `Nytta & mätpunkt: ${d.nytta_matpunkt || "–"}`, `Påverkan & beroenden: ${d.paverkan || "–"}`, `Storlek: ${d.storlek || "–"} · Prioritet: ${d.prioritet || "–"}`].join("\n");
+}
+const exportBar = (id) => `<div class="actions" style="justify-content:flex-start"><button class="btn secondary" data-copy="${id}">Kopiera som text</button>${downloads ? `<button class="btn secondary" data-download="${id}">Ladda ner .txt</button>` : ""}<span class="help" id="copy-status" aria-live="polite"></span></div>`;
+
+function viewExec(c) {
+  const d = c.data, goals = store.goals, s = prioscore(d, goals), bc = businessCase(d);
+  const epics = (d.epics || "").split("\n").filter((x) => x.trim());
+  return `<div class="summary"><section class="panel">
+    <div class="stephead"><h2>Executive summary</h2></div>
+    <p class="meta">Beställare: ${esc(d.bestallare || "–")} · Sponsor: ${esc(d.sponsor || "–")} · Beslut: ${esc(d.beslut || "–")} ${esc(d.beslutsdatum || "")}${d.eskalerad_fran_b ? " · <em>Eskalerat från Tjänst B</em>" : ""}</p>
+    <dl class="es">
+      <dt>Problem</dt><dd>${esc(d.problem || "–")}${d.vem_problem ? `<br><small>Berörda: ${esc(d.vem_problem)}</small>` : ""}</dd>
+      <dt>Lösning</dt><dd>${esc(d.losning || "–")}${d.mvp ? `<br><small>MVP: ${esc(d.mvp)}</small>` : ""}</dd>
+      <dt>Effekter</dt><dd>${esc(d.effekter || "–")}</dd>
+      <dt>Kostnad & ROI</dt><dd>Affärsvärde ${num(bc.value, " tkr")} · Total kostnad ${num(bc.cost, " tkr")} över ${esc(d.livslangd_ar || 1)} år · ROI ${num(bc.roi, " %")}</dd>
+      <dt>Risker</dt><dd>${esc(d.risker || "–")}</dd>
+      <dt>Tid & resurser</dt><dd>${esc(d.tid || "–")}${d.resurser ? `<br><small>${esc(d.resurser)}</small>` : ""}</dd>
+      <dt>Mätpunkter</dt><dd>${esc(d.matpunkter || "–")}</dd>
+      <dt class="rec">Rekommendation</dt><dd class="rec">${esc(d.rekommendation || "–")}</dd>
+    </dl>
+    ${epics.length ? `<h3>Epics</h3><ul style="margin:0">${epics.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}
+    ${exportBar(c.id)}
+  </section><div class="side">
+    <div class="tiles two">
+      <div class="tile"><span>Affärsvärde</span><strong>${num(s.value)}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Komplexitet</span><strong>${num(s.complexity)}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Strategikoppling</span><strong>${num(s.alignment)}</strong><small>% · koefficient ${num(s.coefficient)}</small></div>
+      <div class="tile dark"><span>Prioscore</span><strong>${num(s.score)}</strong><small>${esc(s.level || "–")}</small></div>
+    </div>
+    <section class="panel"><h3>Strategikoppling</h3><div class="scroll"><table class="goals">
+      <thead><tr><th>Strategiskt mål</th><th>Vikt</th><th>Bidrag</th><th>Viktat</th></tr></thead><tbody>
+      ${goals.map((g) => { const b = d["s_" + g.id]; return `<tr><td>${esc(g.name)}</td><td>${num(g.weight, " %")}</td><td>${num(b, " %")}</td><td>${b === undefined || b === "" ? "–" : num((g.weight / 100) * Number(b), " %")}</td></tr>`; }).join("")}
+      </tbody><tfoot><tr><th>Strategikoppling</th><td></td><td></td><th>${num(s.alignment, " %")}</th></tr></tfoot></table></div>
+      <p class="help">Prioscore = Affärsvärde × Strategikoefficient ÷ Komplexitet. ≥ 1,5 hög prioritet · 1,0–1,5 prioritera vid kapacitet · &lt; 1,0 utmana eller omforma.</p>
+    </section>${dorHtml(dor("A", d, s.score, bc.roi))}</div></div>`;
+}
+
+function viewStory(c) {
+  const d = c.data, acs = acRows(d);
+  return `<div class="summary"><section class="panel">
+    <div class="stephead"><h2>User story</h2></div>
+    <p class="meta">Beställare: ${esc(d.bestallare || "–")}${d.system ? " · " + esc(d.system) : ""} · Storlek ${esc(d.storlek || "–")} · Prioritet ${esc(d.prioritet || "–")}</p>
+    <p class="thestory"><b>Som</b> ${esc(d.roll)} <b>vill jag</b> ${esc(d.vill)} <b>så att</b> ${esc(d.sa_att)}</p>
+    <h3>Behov & bakgrund</h3><p class="pre">${esc(d.bakgrund || d.beskrivning || "–")}</p>
+    <h3>Acceptanskriterier</h3><ol class="acs">${acs.length ? acs.map((a) => `<li><b>Givet</b> ${esc(a.givet)} <b>när</b> ${esc(a.nar)} <b>så</b> ${esc(a.sa)}</li>`).join("") : "<li>–</li>"}</ol>
+    <div class="cols"><div><h3>Nytta & mätpunkt</h3><p class="pre">${esc(d.nytta_matpunkt || "–")}</p></div><div><h3>Påverkan & beroenden</h3><p class="pre">${esc(d.paverkan || "–")}</p></div></div>
+    ${d.aterkoppling ? `<h3>Återkoppling</h3><p class="pre">${esc(d.aterkoppling)}</p>` : ""}
+    ${exportBar(c.id)}
+  </section><div class="side">${dorHtml(dor("B", d))}</div></div>`;
+}
+
+function viewGoals() {
+  const ro = !store.canEditGoals;
+  const errs = formErrors.length ? `<div class="errors" role="alert"><ul>${formErrors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>` : "";
+  formErrors = [];
+  const rows = (pendingGoals || store.goals);
+  pendingGoals = null;
+  return `<section class="panel" style="max-width:760px"><h1>Strategiska mål</h1>
+  <p class="intro">Målen och deras vikter sätts av ledningen, normalt en gång per år. Vikterna ska summera till 100 %. Varje större initiativ anger sitt bidrag (0–100 %) till varje mål, och summan av vikt × bidrag blir strategikopplingen.</p>
+  ${ro ? `<p class="notice">Bara redigerare kan ändra målen.</p>` : ""}${errs}
+  <form id="goalform" novalidate><fieldset ${ro ? "disabled" : ""}><div class="scroll"><table>
+    <thead><tr><th>Mål</th><th class="n">Vikt (%)</th></tr></thead><tbody>
+    ${rows.map((g, i) => `<tr><td><input type="hidden" name="gid" value="${esc(g.id)}"><input id="goal_name_${i}" name="name" value="${esc(g.name)}" aria-label="Mål ${i + 1}"></td>
+      <td class="n"><input id="goal_weight_${i}" name="weight" type="number" step="any" value="${esc(g.weight)}" aria-label="Vikt för mål ${i + 1}"></td></tr>`).join("")}
+    <tr><td><input type="hidden" name="gid" value=""><input id="goal_name_new" name="name" placeholder="Nytt mål" aria-label="Nytt mål"></td>
+      <td class="n"><input id="goal_weight_new" name="weight" type="number" step="any" placeholder="0" aria-label="Vikt för nytt mål"></td></tr>
+    </tbody></table></div></fieldset>
+    <p class="help">Töm ett måls namn för att ta bort det. Läggs ett mål till behöver större initiativ ange sitt bidrag till det innan prioscore räknas igen.</p>
+    ${ro ? "" : `<div class="actions"><button class="btn" type="submit">Spara mål</button></div>`}
+  </form></section>`;
+}
+let pendingGoals = null;
+
+/* ---------- Händelser ---------- */
+function readForm(step, d, form) {
+  const fd = new FormData(form);
+  for (const f of step.fields) {
+    if (f.type === "checkbox") d[f.name] = fd.get(f.name) ? "on" : "";
+    else if (f.type === "ac_list") for (let i = 0; i < AC_ROWS; i++) for (const p of ["givet", "nar", "sa"]) d[`ac_${i}_${p}`] = String(fd.get(`ac_${i}_${p}`) || "").trim();
+    else d[f.name] = String(fd.get(f.name) ?? "").trim();
+  }
+  if (step.kind === "prioscore") store.goals.forEach((g) => (d["s_" + g.id] = String(fd.get("s_" + g.id) ?? "").trim()));
+  return d;
+}
+const newId = () => "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+async function persist(c) {
+  try { await store.saveCase(c); return true; }
+  catch (e) {
+    if (e && e.code === "invalid_argument") { store.canWrite = false; flash = "Du har inte behörighet att spara ändringar."; }
+    else if (e && e.code === "quota_exceeded") flash = "Databasen är full. Radera gamla ärenden och försök igen.";
+    else flash = "Det gick inte att spara just nu. Försök igen om en stund.";
+    render();
+    return false;
+  }
+}
+
+$main.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const form = ev.target;
+  const action = ev.submitter?.value || "next";
+  if (form.getAttribute("id") === "goalform") return submitGoals(form);
+  if (form.getAttribute("id") !== "stepform") return;
+  const caseId = form.dataset.case, key = form.dataset.step;
+  form.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  if (!caseId) {
+    const d = readForm(INTAG, {}, form);
+    const missing = missingFields(INTAG, d, null, store.goals);
+    if (missing.length) { formErrors = missing; draft = d; render(); return; }
+    const now = new Date().toISOString();
+    const c = { id: newId(), titel: d.titel, tjanst: "", data: d, skapad: now, uppdaterad: now };
+    if (await persist(c)) go(`a-${c.id}-triage`);
+    return;
+  }
+  const c = store.cases.get(caseId);
+  if (!c) return render();
+  const step = getStep(c.tjanst || null, key);
+  let d = readForm(step, { ...c.data }, form);
+  let service = c.tjanst || null;
+  if (step.kind === "triage") service = ["A", "B"].includes(d.triage_overstyr) ? d.triage_overstyr : triageService(d);
+  if (key === "prioritera" && d.eskalera === "on") {
+    d = escalateToA(d);
+    if (await persist({ ...c, titel: d.titel || c.titel, tjanst: "A", data: d })) { flash = "Ärendet är eskalerat till Tjänst A. Det som redan skrivits är återanvänt."; go(`a-${c.id}-problem`); }
+    return;
+  }
+  const updated = { ...c, titel: d.titel || c.titel, tjanst: service || "", data: d };
+  if (!(await persist(updated))) return;
+  if (action === "save") { flash = "Utkastet är sparat."; render(); return; }
+  const missing = missingFields(step, d, service, store.goals);
+  if (missing.length) { formErrors = missing; render(); return; }
+  const steps = stepsFor(service);
+  go(`a-${c.id}-${steps[steps.findIndex((s) => s.key === key) + 1].key}`);
+});
+let draft = null;
+
+async function submitGoals(form) {
+  const fd = new FormData(form);
+  const ids = fd.getAll("gid"), names = fd.getAll("name"), weights = fd.getAll("weight");
+  const goals = [], errs = [];
+  names.forEach((n, i) => {
+    n = String(n).trim();
+    if (!n) return;
+    const w = Number(weights[i]);
+    if (weights[i] === "" || !Number.isFinite(w)) errs.push(`Vikten för ${n} måste vara ett tal.`);
+    goals.push({ id: String(ids[i] || "") || "g" + Date.now().toString(36) + i, name: n, weight: Number.isFinite(w) ? w : 0 });
+  });
+  const total = goals.reduce((a, g) => a + g.weight, 0);
+  if (!goals.length) errs.push("Ange minst ett strategiskt mål.");
+  else if (Math.abs(total - 100) > 0.01) errs.push(`Vikterna måste summera till 100 % (nu ${num(total)} %).`);
+  if (errs.length) { formErrors = errs; pendingGoals = goals; render(); return; }
+  try { await store.saveGoals(goals); flash = "De strategiska målen är sparade."; }
+  catch (e) { flash = e?.code === "invalid_argument" ? "Bara redigerare kan ändra målen." : "Det gick inte att spara målen just nu."; if (e?.code === "invalid_argument") store.canEditGoals = false; }
+  render();
+}
+
+let confirmDelete = null;
+$main.addEventListener("click", async (ev) => {
+  const del = ev.target.closest("[data-delete]");
+  if (del) {
+    const id = del.dataset.delete;
+    if (confirmDelete !== id) { confirmDelete = id; del.textContent = "Bekräfta radering"; del.classList.add("danger"); return; }
+    confirmDelete = null;
+    try { await store.deleteCase(id); flash = "Ärendet är raderat."; } catch { flash = "Det gick inte att radera ärendet."; }
+    render();
+    return;
+  }
+  const cp = ev.target.closest("[data-copy]"), dl = ev.target.closest("[data-download]");
+  if (cp || dl) {
+    const c = store.cases.get((cp || dl).dataset.copy || (cp || dl).dataset.download);
+    const text = c.tjanst === "A" ? execText(c, prioscore(c.data, store.goals), businessCase(c.data)) : storyText(c);
+    const status = document.getElementById("copy-status");
+    if (cp) {
+      try { await navigator.clipboard.writeText(text); status.textContent = "Kopierat."; }
+      catch { status.textContent = "Kopieringen stöds inte här – markera texten och kopiera manuellt."; }
+    } else {
+      try { await downloads.save({ filename: (c.titel || "arende").replace(/[^\wåäöÅÄÖ -]+/g, "").trim() + ".txt", data: text }); }
+      catch { status.textContent = "Nedladdningen avbröts."; }
+    }
+  }
+});
+
+function bindLive() {
+  if (draft) { const f = document.getElementById("stepform"); if (f) for (const [k, v] of Object.entries(draft)) { const el = f.elements[k]; if (el && "value" in el) el.value = v; } draft = null; }
+  const verdict = document.getElementById("verdict");
+  if (verdict) {
+    const upd = () => {
+      const ans = TRIAGE_QUESTIONS.map(([k]) => document.querySelector(`input[name="${k}"]:checked`)?.value || null);
+      const s = ans.every(Boolean) ? (ans.includes("ja") ? "A" : "B") : null;
+      verdict.classList.toggle("A", s === "A");
+      document.getElementById("verdict-service").textContent = s ? "Tjänst " + s : "–";
+      document.getElementById("verdict-name").textContent = SERVICE_NAMES[s] || "Besvara alla frågor";
+    };
+    verdict.closest("form").addEventListener("change", upd);
+  }
+  const tiles = document.getElementById("score-tiles");
+  if (tiles) {
+    const out = (k, v) => (tiles.querySelector(`[data-out="${k}"]`).textContent = v);
+    const w = (g, lo, hi) => {
+      const ins = [...document.querySelectorAll(`input[data-group="${g}"]`)];
+      let sum = 0;
+      for (const i of ins) { const v = parseFloat(i.value); if (Number.isNaN(v) || v < lo || v > hi) return null; sum += v * parseFloat(i.dataset.weight); }
+      return ins.length ? sum : null;
+    };
+    const upd = () => {
+      const v = w("v", 1, 10), c = w("c", 1, 10), s = w("s", 0, 100);
+      const k = s === null ? null : s / 100, p = v === null || c === null || k === null ? null : (v * k) / c;
+      out("v", num(v)); out("c", num(c)); out("s", num(s)); out("k", num(k)); out("p", num(p));
+      out("l", p === null ? "Värde × koeff. ÷ komplexitet" : p >= HIGH ? "Hög prioritet" : p >= MEDIUM ? "Prioritera vid kapacitet" : "Utmana eller omforma");
+    };
+    tiles.closest("form").addEventListener("input", upd);
+  }
+}
+
+/* ---------- Start ---------- */
+let downloads = null;
+render();
+(async () => {
+  const [db, user, dl] = await Promise.all([
+    window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null, window.claude?.use?.("downloads") ?? null,
+  ]).catch(() => [null, null, null]);
+  downloads = dl;
+  if (user) {
+    try { const w = await user.can("data.write"); if (w === false) store.canWrite = false; } catch {}
+    try { store.canEditGoals = (await user.canEdit()) !== false; } catch {}
+  }
+  if (!db) {
+    store.mode = "local"; loadLocal(); store.loaded = true; render(); return;
+  }
+  store.mode = "db"; store.db = db;
+  db.doc("config/mal").onSnapshot((snap) => {
+    const g = snap.exists ? snap.data().goals : null;
+    store.goals = Array.isArray(g) && g.length ? g.map((x) => ({ ...x })) : DEFAULT_GOALS;
+    if (!editing) render();
+  }, () => {});
+  db.collection("arenden").onSnapshot((snap) => {
+    const first = !store.loaded;
+    store.cases = new Map(snap.docs.map((d) => { const b = d.data(); return [d.id, { id: d.id, titel: b.titel, tjanst: b.tjanst || "", data: { ...(b.data || {}) }, skapad: b.skapad, uppdaterad: b.uppdaterad }]; }));
+    store.loaded = true;
+    if (first || !editing) render();
+  }, (e) => {
+    store.mode = "local"; loadLocal(); store.loaded = true;
+    flash = e?.code === "revoked" ? null : "Anslutningen till databasen bröts. Ladda om sidan.";
+    render();
+  });
+})();
+})();
+</script>

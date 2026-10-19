@@ -36,7 +36,16 @@ initiativ fylla i sitt bidrag till det nya målet innan prioscore kan räknas ig
 En user story i Tjänst B som visar sig vara större kan eskaleras till Tjänst A. Det som redan
 skrivits återanvänds då i problembeskrivningen.
 
-## Kom igång
+## Webbversion på claude.ai
+
+`web/kravfangst.html` är samma tjänst byggd som en enda webbsida, publicerad på claude.ai som en
+Artifact: https://claude.ai/artifact/UajpCbDRNB9M4wJV3jP4Gu. Den kräver ingen installation. Ärenden
+och strategiska mål sparas i sidans delade databas, så alla som sidan delas med ser samma data.
+Personer med behörigheten Contributor eller högre kan registrera och redigera ärenden. Bara Editor
+och ägaren kan ändra de strategiska målen. Reglerna för prioscore är desamma som i
+`kravfangst/scoring.py`. Ändrar du dem behöver båda ställena uppdateras.
+
+## Kom igång (Python-versionen)
 
 ```bash
 python3 -m venv .venv
