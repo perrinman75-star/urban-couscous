@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Executive summary{% endblock %}
+{% block content %}
+{% include "_crumbs.html" %}
+
+<div class="summary">
+  <section class="panel">
+    <div class="stephead">
+      <h2>Executive summary</h2>
+      <button type="button" class="secondary noprint" onclick="window.print()">Skriv ut / PDF</button>
+    </div>
+    <p class="meta">Beställare: {{ data.bestallare or "–" }} · Sponsor: {{ data.sponsor or "–" }}
+      · Beslut: {{ data.beslut or "–" }} {{ data.beslutsdatum or "" }}
+      {% if data.eskalerad_fran_b %} · <em>Eskalerat från Tjänst B</em>{% endif %}</p>
+    <dl class="es">
+      <dt>Problem</dt><dd>{{ data.problem or "–" }}{% if data.vem_problem %}<br><small>Berörda: {{ data.vem_problem }}</small>{% endif %}</dd>
+      <dt>Lösning</dt><dd>{{ data.losning or "–" }}{% if data.mvp %}<br><small>MVP: {{ data.mvp }}</small>{% endif %}</dd>
+      <dt>Effekter</dt><dd>{{ data.effekter or "–" }}</dd>
+      <dt>Kostnad & ROI</dt><dd>Affärsvärde {{ (bc.business_value)|num(" tkr") }} · Total kostnad {{ (bc.total_cost)|num(" tkr") }}
+        över {{ data.livslangd_ar or 1 }} år · ROI {{ (bc.roi)|num(" %") }}</dd>
+      <dt>Risker</dt><dd>{{ data.risker or "–" }}</dd>
+      <dt>Tid & resurser</dt><dd>{{ data.tid or "–" }}{% if data.resurser %}<br><small>{{ data.resurser }}</small>{% endif %}</dd>
+      <dt>Mätpunkter</dt><dd>{{ data.matpunkter or "–" }}</dd>
+      <dt class="rec">Rekommendation</dt><dd class="rec">{{ data.rekommendation or "–" }}</dd>
+    </dl>
+    {% if epics %}<h3>Epics</h3><ul>{% for e in epics %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  <div class="side">
+    <div class="tiles two">
+      <div class="tile"><span>Affärsvärde</span><strong>{{ score.value|num }}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Komplexitet</span><strong>{{ score.complexity|num }}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Strategikoppling</span><strong>{{ score.alignment|num }}</strong><small>% · koefficient {{ score.coefficient|num }}</small></div>
+      <div class="tile dark"><span>Prioscore</span><strong>{{ score.score|num }}</strong><small>{{ score.level or "–" }}</small></div>
+    </div>
+    <section class="panel">
+      <h3>Strategikoppling</h3>
+      <table class="goals">
+        <thead><tr><th>Strategiskt mål</th><th>Vikt</th><th>Bidrag</th><th>Viktat</th></tr></thead>
+        <tbody>
+          {% for g, c in contributions %}
+            <tr><td>{{ g.name }}</td><td>{{ (g.weight)|num(" %") }}</td><td>{{ c|num(" %") }}</td>
+              <td>{{ ((g.weight / 100) * (c|float))|num(" %") if c else "–" }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><th>Strategikoppling</th><td></td><td></td><th>{{ (score.alignment)|num(" %") }}</th></tr></tfoot>
+      </table>
+      <p class="help">Prioscore = Affärsvärde × Strategikoefficient ÷ Komplexitet.
+        ≥ 1,5 hög prioritet · 1,0–1,5 prioritera vid kapacitet · &lt; 1,0 utmana eller omforma.</p>
+    </section>
+    {% include "_dor.html" %}
+  </div>
+</div>
+{% endblock %}

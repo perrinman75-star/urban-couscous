@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}{{ step.title }}{% endblock %}
+
+{% macro input(f) %}
+  {% set v = data.get(f.name, "") %}
+  <div class="field{% if f.type == 'checkbox' %} check{% endif %}">
+    {% if f.type == "checkbox" %}
+      <label><input type="checkbox" name="{{ f.name }}" {% if v == 'on' %}checked{% endif %}>
+        {{ f.label }}{% if f.required %} <span class="req">*</span>{% endif %}</label>
+    {% else %}
+      <label for="{{ f.name }}">{{ f.label }}{% if f.required %} <span class="req">*</span>{% endif %}</label>
+      {% if f.type == "textarea" %}
+        <textarea id="{{ f.name }}" name="{{ f.name }}" rows="3" placeholder="{{ f.placeholder }}">{{ v }}</textarea>
+      {% elif f.type == "select" %}
+        <select id="{{ f.name }}" name="{{ f.name }}">
+          {% for c in f.choices %}<option value="{{ c }}" {% if c == v %}selected{% endif %}>{{ c or "Välj …" }}</option>{% endfor %}
+        </select>
+      {% else %}
+        <input id="{{ f.name }}" name="{{ f.name }}" type="{{ f.type }}" value="{{ v }}"
+               placeholder="{{ f.placeholder }}" {% if f.type == 'number' %}step="any"{% endif %}>
+      {% endif %}
+    {% endif %}
+    {% if f.help %}<p class="help">{{ f.help }}</p>{% endif %}
+  </div>
+{% endmacro %}
+
+{% block content %}
+{% include "_crumbs.html" %}
+
+<section class="panel">
+  <div class="stephead">
+    <h2>{{ step.title }}</h2>
+    {% if step.who %}<p class="who">{{ step.who }}</p>{% endif %}
+  </div>
+  {% if step.intro %}<p class="intro">{{ step.intro }}</p>{% endif %}
+
+  {% if errors %}
+    <div class="errors" role="alert">
+      <strong>Fyll i för att gå vidare:</strong>
+      <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('kravfangst.new_case') if not case else url_for('kravfangst.step', case_id=case.id, key=step.key) }}">
+
+  {% if step.kind == "triage" %}
+    <div class="triage">
+      <div class="questions">
+        {% for key, label, question in questions %}
+          <fieldset class="question">
+            <legend><span class="qlabel">{{ label }}</span> {{ question }}</legend>
+            {% for opt in ["ja", "nej"] %}
+              <label class="pill"><input type="radio" name="{{ key }}" value="{{ opt }}"
+                {% if data.get(key) == opt %}checked{% endif %}> {{ opt|capitalize }}</label>
+            {% endfor %}
+          </fieldset>
+        {% endfor %}
+      </div>
+      <aside class="verdict" id="verdict" aria-live="polite"
+             data-recommended="{{ recommended or '' }}">
+        <p class="small">Rekommenderad tjänst</p>
+        <p class="big" id="verdict-service">{{ recommended and ("Tjänst " ~ recommended) or "–" }}</p>
+        <p id="verdict-name">{{ SERVICE_NAMES.get(recommended, "Besvara alla frågor") }}</p>
+      </aside>
+    </div>
+    <details class="override" {% if data.get('triage_overstyr') %}open{% endif %}>
+      <summary>Överstyr rekommendationen</summary>
+      {{ input(step.fields[-2]) }}
+      {{ input(step.fields[-1]) }}
+    </details>
+
+  {% elif step.kind == "prioscore" %}
+    <div class="scoregrid">
+      {% for title, criteria, hint in [("Affärsvärde", value_criteria, "Högt = mer värde"),
+                                       ("Komplexitet", complexity_criteria, "Högt = svårare")] %}
+        <fieldset class="card">
+          <legend>{{ title }} <span class="hint">1–10 · {{ hint }}</span></legend>
+          {% for key, label, weight in criteria %}
+            <label class="row">
+              <span>{{ label }} <em>{{ (weight * 100)|round|int }} %</em></span>
+              <input type="number" min="1" max="10" step="1" name="{{ key }}" value="{{ data.get(key, '') }}"
+                     data-group="{{ 'v' if title == 'Affärsvärde' else 'c' }}" data-weight="{{ weight }}">
+            </label>
+          {% endfor %}
+        </fieldset>
+      {% endfor %}
+      <fieldset class="card">
+        <legend>Strategikoppling <span class="hint">bidrag 0–100 %</span></legend>
+        {% for g in goals %}
+          <label class="row">
+            <span>{{ g.name }} <em>vikt {{ g.weight|round|int }} %</em></span>
+            <input type="number" min="0" max="100" step="1" name="s_{{ g.id }}" value="{{ data.get('s_' ~ g.id, '') }}"
+                   data-group="s" data-weight="{{ g.weight / 100 }}">
+          </label>
+        {% endfor %}
+        <p class="help"><a href="{{ url_for('kravfangst.goals') }}">Ändra strategiska mål och vikter</a></p>
+      </fieldset>
+    </div>
+    <div class="tiles" id="score-tiles" aria-live="polite">
+      <div class="tile"><span>Affärsvärde</span><strong data-out="v">{{ score.value|num }}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Komplexitet</span><strong data-out="c">{{ score.complexity|num }}</strong><small>/ 10</small></div>
+      <div class="tile"><span>Strategikoppling</span><strong data-out="s">{{ score.alignment|num }}</strong><small>% · koefficient <b data-out="k">{{ score.coefficient|num }}</b></small></div>
+      <div class="tile dark"><span>Prioscore</span><strong data-out="p">{{ score.score|num }}</strong><small data-out="l">{{ score.level or "Värde × koeff. ÷ komplexitet" }}</small></div>
+    </div>
+
+  {% else %}
+    {% for f in step.fields %}
+      {% if f.type == "ac_list" %}
+        <fieldset class="aclist">
+          <legend>{{ f.label }} <span class="req">*</span></legend>
+          <p class="help">Minst ett komplett kriterium i formen Givet – När – Så.</p>
+          {% for i in range(AC_ROWS) %}
+            <div class="acrow">
+              <span class="acno">AC{{ i + 1 }}</span>
+              <input name="ac_{{ i }}_givet" placeholder="Givet …" value="{{ data.get('ac_%d_givet' % i, '') }}" aria-label="AC{{ i + 1 }} givet">
+              <input name="ac_{{ i }}_nar" placeholder="När …" value="{{ data.get('ac_%d_nar' % i, '') }}" aria-label="AC{{ i + 1 }} när">
+              <input name="ac_{{ i }}_sa" placeholder="Så …" value="{{ data.get('ac_%d_sa' % i, '') }}" aria-label="AC{{ i + 1 }} så">
+            </div>
+          {% endfor %}
+        </fieldset>
+      {% elif step.key == "user_story" and f.name == "roll" %}
+        <fieldset class="story">
+          <legend>User story <span class="req">*</span></legend>
+          {% for sf in step.fields[:3] %}
+            <label class="storypart"><span>{{ sf.label }}</span>
+              <input name="{{ sf.name }}" value="{{ data.get(sf.name, '') }}" placeholder="{{ sf.placeholder }}"></label>
+          {% endfor %}
+        </fieldset>
+      {% elif step.key == "user_story" and f.name in ("vill", "sa_att") %}
+      {% else %}
+        {{ input(f) }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+    <div class="actions">
+      {% if case %}<button type="submit" name="action" value="save" class="secondary">Spara utkast</button>{% endif %}
+      <button type="submit" name="action" value="next">Spara och gå vidare →</button>
+    </div>
+  </form>
+</section>
+
+<script src="{{ url_for('static', filename='flow.js') }}"></script>
+{% endblock %}

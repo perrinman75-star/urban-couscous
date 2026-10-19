@@ -1,0 +1,27 @@
+<div class="flowhead">
+  <div>
+    <p class="service-tag service-{{ service or 'none' }}">
+      {{ SERVICE_NAMES.get(service, "Tjänst avgörs i triage") }}
+    </p>
+    <h1>{{ case.titel if case else "Nytt behov" }}</h1>
+  </div>
+</div>
+<nav class="crumbs" aria-label="Steg i kravfångsten">
+  <ol>
+    {% for c in crumbs %}
+      <li class="crumb {{ c.state }}{% if c.done and c.state != 'current' %} done{% endif %}">
+        {% set label %}
+          <span class="num">{% if c.done and c.state != 'current' %}✓{% else %}{{ loop.index }}{% endif %}</span>
+          <span class="label">{{ c.step.title }}</span>
+        {% endset %}
+        {% if c.state == 'current' %}
+          <span aria-current="step">{{ label }}</span>
+        {% elif c.state == 'locked' or not case %}
+          <span aria-disabled="true">{{ label }}</span>
+        {% else %}
+          <a href="{{ url_for('kravfangst.step', case_id=case.id, key=c.step.key) }}">{{ label }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</nav>

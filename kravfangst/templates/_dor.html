@@ -1,0 +1,12 @@
+<section class="panel dor">
+  <h2>Definition of Ready</h2>
+  <ul class="checklist">
+    {% for label, ok in dor %}
+      <li class="{{ 'ok' if ok else 'nok' }}"><span class="box" aria-hidden="true">{{ "✓" if ok else "" }}</span>
+        {{ label }}<span class="sr">{{ " – klart" if ok else " – saknas" }}</span></li>
+    {% endfor %}
+  </ul>
+  {% set all_ok = dor|selectattr(1)|list|length == dor|length %}
+  <p class="status {{ 'ok' if all_ok else 'nok' }}">
+    {{ "Redo för utveckling" if all_ok else "Inte redo ännu – komplettera punkterna ovan" }}</p>
+</section>

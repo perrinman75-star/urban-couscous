@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Strategiska mål{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h1>Strategiska mål</h1>
+  <p class="intro">Målen och deras vikter sätts av ledningen, normalt en gång per år. Vikterna ska
+    summera till 100 %. Varje större initiativ anger sitt bidrag (0–100 %) till varje mål, och
+    summan av vikt × bidrag blir strategikopplingen.</p>
+  {% if errors %}<div class="errors" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+  <form method="post">
+    <table class="list">
+      <thead><tr><th>Mål</th><th class="n">Vikt (%)</th></tr></thead>
+      <tbody>
+        {% for g in goals %}
+          <tr><td><input type="hidden" name="id" value="{{ g.id or '' }}">
+              <input name="name" value="{{ g.name }}" aria-label="Mål"></td>
+            <td class="n"><input name="weight" type="number" step="any" value="{{ '%g' % g.weight }}" aria-label="Vikt"></td></tr>
+        {% endfor %}
+        <tr><td><input type="hidden" name="id" value=""><input name="name" placeholder="Nytt mål" aria-label="Nytt mål"></td>
+          <td class="n"><input name="weight" type="number" step="any" placeholder="0" aria-label="Vikt för nytt mål"></td></tr>
+      </tbody>
+    </table>
+    <p class="help">Töm ett måls namn för att ta bort det.</p>
+    <div class="actions"><button type="submit">Spara mål</button></div>
+  </form>
+</section>
+{% endblock %}

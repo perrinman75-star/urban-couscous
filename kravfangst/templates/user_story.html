@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}User story{% endblock %}
+{% block content %}
+{% include "_crumbs.html" %}
+
+<div class="summary">
+  <section class="panel storycard">
+    <div class="stephead">
+      <h2>User story</h2>
+      <button type="button" class="secondary noprint" onclick="window.print()">Skriv ut / PDF</button>
+    </div>
+    <p class="meta">Beställare: {{ data.bestallare or "–" }}{% if data.system %} · {{ data.system }}{% endif %} · Storlek {{ data.storlek or "–" }} · Prioritet {{ data.prioritet or "–" }}</p>
+    <p class="thestory"><b>Som</b> {{ data.roll }} <b>vill jag</b> {{ data.vill }} <b>så att</b> {{ data.sa_att }}</p>
+
+    <h3>Behov & bakgrund</h3>
+    <p>{{ data.bakgrund or data.beskrivning or "–" }}</p>
+
+    <h3>Acceptanskriterier</h3>
+    <ol class="acs">
+      {% for ac in acs %}
+        <li><b>Givet</b> {{ ac.givet }} <b>när</b> {{ ac.nar }} <b>så</b> {{ ac.sa }}</li>
+      {% else %}<li>–</li>{% endfor %}
+    </ol>
+
+    <div class="cols">
+      <div><h3>Nytta & mätpunkt</h3><p>{{ data.nytta_matpunkt or "–" }}</p></div>
+      <div><h3>Påverkan & beroenden</h3><p>{{ data.paverkan or "–" }}</p></div>
+    </div>
+    {% if data.aterkoppling %}<h3>Återkoppling</h3><p>{{ data.aterkoppling }}</p>{% endif %}
+  </section>
+  <div class="side">{% include "_dor.html" %}</div>
+</div>
+{% endblock %}

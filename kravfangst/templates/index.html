@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Ärenden{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>Kravfångst som tjänst</h1>
+  <p>Alla behov registreras på ett ställe. En kort triage avgör om behovet blir ett
+    <b>större initiativ</b> (business case, executive summary och prioscore) eller
+    <b>mindre vidareutveckling</b> (user story med acceptanskriterier).</p>
+  <a class="button" href="{{ url_for('kravfangst.new_case') }}">+ Registrera nytt behov</a>
+</div>
+
+{% if portfolio %}
+<section class="panel">
+  <h2>Portfölj – större initiativ efter prioscore</h2>
+  <div class="scroll"><table class="list">
+    <thead><tr><th>#</th><th>Initiativ</th><th class="n">Affärsvärde</th><th class="n">Komplexitet</th>
+      <th class="n">Strategi</th><th class="n">Prioscore</th><th>Nivå</th></tr></thead>
+    <tbody>
+      {% for c in portfolio %}
+        <tr><td>{{ loop.index }}</td>
+          <td><a href="{{ url_for('kravfangst.case_start', case_id=c.id) }}">{{ c.titel }}</a></td>
+          <td class="n">{{ c.score.value|num }}</td><td class="n">{{ c.score.complexity|num }}</td>
+          <td class="n">{{ c.score.alignment|num(" %") }}</td><td class="n"><b>{{ c.score.score|num }}</b></td>
+          <td>{{ c.score.level }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Alla ärenden</h2>
+  {% if cases %}
+  <div class="scroll"><table class="list">
+    <thead><tr><th>Ärende</th><th>Tjänst</th><th>Nästa steg</th><th>Framsteg</th><th>Uppdaterad</th><th></th></tr></thead>
+    <tbody>
+      {% for c in cases %}
+        <tr>
+          <td><a href="{{ url_for('kravfangst.case_start', case_id=c.id) }}">{{ c.titel }}</a></td>
+          <td><span class="service-tag service-{{ c.tjanst or 'none' }}">{{ ("Tjänst " ~ c.tjanst) if c.tjanst else "Triage" }}</span></td>
+          <td>{% if c.progress[0] == c.progress[1] %}<b>Klar</b> – {{ c.next.title|lower }}{% else %}{{ c.next.title }}{% endif %}</td>
+          <td><progress value="{{ c.progress[0] }}" max="{{ c.progress[1] }}"></progress>
+            <small>{{ c.progress[0] }}/{{ c.progress[1] }}</small></td>
+          <td><small>{{ c.uppdaterad.replace("T", " ") }}</small></td>
+          <td>
+            <form method="post" action="{{ url_for('kravfangst.delete', case_id=c.id) }}"
+                  onsubmit="return confirm('Radera ärendet?')">
+              <button class="link" type="submit">Radera</button></form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+    <p>Inga ärenden ännu.</p>
+  {% endif %}
+</section>
+{% endblock %}
